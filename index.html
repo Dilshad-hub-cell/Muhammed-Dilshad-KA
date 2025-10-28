@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OTP Login</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      padding: 30px;
+      border-radius: 8px;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    input[type="text"], button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 4px;
+      border: 1px solid #ccc;
+      box-sizing: border-box;
+    }
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #0056b3;
+    }
+    .hidden {
+      display: none;
+    }
+    #status-message {
+      margin-top: 10px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Login / Sign Up</h2>
+    <form id="input-form">
+      <input type="text" id="contact-input" placeholder="Enter Phone Number with +91" required>
+      <div id="recaptcha-container"></div>
+      <button type="submit">Send OTP</button>
+    </form>
+
+    <div id="otp-section" class="hidden">
+      <input type="text" id="otp-input" placeholder="Enter OTP" maxlength="6" required>
+      <button id="verify-btn">Verify OTP</button>
+      <p id="status-message"></p>
+    </div>
+  </div>
+
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyCpvc1Bn24JDeZJqN69kz3jP7UFrAfAE8A",
+      authDomain: "test-79260.firebaseapp.com",
+      projectId: "test-79260",
+      storageBucket: "test-79260.appspot.com",
+      messagingSenderId: "889621495827",
+      appId: "1:889621495827:web:eddb66e641b27c8bbdffe6",
+      measurementId: "G-15STD001WY"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const inputForm = document.getElementById('input-form');
+    const contactInput = document.getElementById('contact-input');
+    const otpSection = document.getElementById('otp-section');
+    const otpInput = document.getElementById('otp-input');
+    const verifyBtn = document.getElementById('verify-btn');
+    const statusMessage = document.getElementById('status-message');
+
+    let confirmationResult;
+
+    window.recaptchaVerifier = new firebase.auth.RecaptchaVerifier('recaptcha-container', {
+      size: 'normal', // ✅ visible reCAPTCHA
+      callback: function(response) {
+        console.log("reCAPTCHA solved");
+      }
+    });
+
+    inputForm.addEventListener('submit', function(e) {
+      e.preventDefault();
+      const phoneNumber = contactInput.value.trim();
+      const appVerifier = window.recaptchaVerifier;
+
+      firebase.auth().signInWithPhoneNumber(phoneNumber, appVerifier)
+        .then((result) => {
+          confirmationResult = result;
+          otpSection.classList.remove('hidden');
+          alert("OTP sent to " + phoneNumber);
+        })
+        .catch((error) => {
+          console.error("Error during signInWithPhoneNumber", error);
+          alert("Failed to send OTP: " + error.message);
+        });
+    });
+
+    verifyBtn.addEventListener('click', function() {
+      const otpCode = otpInput.value.trim();
+      confirmationResult.confirm(otpCode)
+        .then((result) => {
+          statusMessage.textContent = "✅ OTP verified successfully!";
+          statusMessage.style.color = "green";
+        })
+        .catch((error) => {
+          statusMessage.textContent = "❌ Invalid OTP. Try again.";
+          statusMessage.style.color = "red";
+        });
+    });
+  </script>
+
+</body></html>
